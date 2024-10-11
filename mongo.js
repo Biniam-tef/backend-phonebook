@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
 
 if (process.argv.length < 3) {
   console.log('give password as argument')
@@ -29,24 +29,22 @@ mongoose.connect(url)
 
     // If name and number are provided, add new entry
     if (name && number) {
-      const newPhoneEntry = new Phone({ name, number });
+      const newPhoneEntry = new Phone({ name, number })
       return newPhoneEntry.save().then(() => {
         console.log(`Added ${name} number ${number} to phonebook`)
-        return Phone.find({})
-      });
+        mongoose.connection.close() 
+      })
     } else {
       // If no new name and number are provided, just print all the existing data
-      return Phone.find({})
+      return Phone.find({}).then(result => {
+        console.log('Phonebook entries:')
+        result.forEach(entry => {
+          console.log(`${entry.name} ${entry.number}`)
+        })
+        mongoose.connection.close() 
+      })
     }
   })
-  .then(result => {
-    console.log('Phonebook entries:')
-    result.forEach(entry => {
-      console.log(`${entry.name} ${entry.number}`)
-    });
-    mongoose.connection.close()
+  .catch((err) => {
+    console.log('Error connecting to MongoDB:', err.message)
   })
-  .catch(err => {
-    console.error('Error:', err.message)
-    mongoose.connection.close()
-  });
