@@ -1,2 +1,3 @@
 # Node modules directory, which contains installed dependencies
 node_modules/
+.env
