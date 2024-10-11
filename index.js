@@ -5,7 +5,7 @@ const morgan = require('morgan')
 const app = express()
 
 require('dotenv').config()
-//Import the model from phonebook.js
+
 const Phone = require('./models/phonebook')
 
 app.use(express.static('dist'))
