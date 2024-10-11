@@ -1,8 +1,13 @@
+require('dotenv').config()
+
 const express = require('express')
 const cors = require('cors')
 const morgan = require('morgan')
 
 const app = express()
+
+//Import the model from phonebook.js
+const Phone = require('./models/phonebook')
 
 app.use(express.static('dist'))
 app.use(express.json())
@@ -123,7 +128,7 @@ app.put('/api/persons/:id', (req, res) => {
   res.json(updatedPhone);
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
