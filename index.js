@@ -1,11 +1,10 @@
-require('dotenv').config()
-
 const express = require('express')
 const cors = require('cors')
 const morgan = require('morgan')
 
 const app = express()
 
+require('dotenv').config()
 //Import the model from phonebook.js
 const Phone = require('./models/phonebook')
 
@@ -43,12 +42,13 @@ let phones = [
       "number": "39-23-6423122"
     }
 ]
-//Ex 3.1
+
 app.get('/api/persons', (req, res) => {
-  res.json(phones)
+  Phone.find({}).then(phones => {
+    response.json(phones)
+  })
 })
 
-//Ex 3.2
 let visitors = 0
 const currentDate = new Date().toString()
 app.get('/info', (req, res) => {
@@ -61,72 +61,62 @@ app.get('/info', (req, res) => {
           `)
 })
 
-//Ex 3.3
-app.get(`/api/persons/:id`, (req, res) => {
-  const id = req.params.id
-  const phone = phones.find(v => v.id === id)
-  if(phone) {
-   res.json(phone)
-  }
-  else {
-    res.status(404).end()
-  }
+// Fetch a specific person by ID
+app.get('/api/persons/:id', (req, res) => {
+  Phone.findById(req.params.id).then(phone => {
+    if (phone) {
+      res.json(phone)
+    } else {
+      res.status(404).end()
+    }
+  }).catch(error => {
+    res.status(500).json({ error: 'failed to fetch person' })
+  })
 })
 
-//Ex 3.4
+// Delete a person by ID
 app.delete('/api/persons/:id', (req, res) => {
-  const id = req.params.id.toString()
-  phones = phones.filter(v => v.id !== id)
-  res.status(204).end()
+  Phone.findByIdAndRemove(req.params.id)
+    .then(() => {
+      res.status(204).end()
+    })
+    .catch(error => res.status(500).json({ error: 'failed to delete' }))
 })
 
-//Ex 3.5
-function generate_id(n) {
-  return Math.floor(Math.random()* 1000)
-}
+// Add a new person
 app.post('/api/persons', (req, res) => {
   const body = req.body
-  console.log(req.body)
-  function getUniqueId() {
-    let id = generate_id().toString()
-    
-    while(phones.find(v => v.id === id)) {
-      id = generate_id().toString()
-    }
-    return id
+
+  if (!body.name || !body.number) {
+    return res.status(400).json({ error: 'content missing' })
   }
- 
-  let add_phone = {
-    id : getUniqueId(),
-    name : body.name,
+
+  const phone = new Phone({
+    name: body.name,
     number: body.number
-  } 
-  console.log('...check phone', add_phone)
-  let isDuplicate = phones.find(v => v.name === add_phone.name)
+  })
 
-  if(isDuplicate || !body.name || !body.number) {
-    res.status(400).json({ 
-      error: 'content missing' 
-    })
-  }
-  phones = phones.concat(add_phone)
-  res.json(phones)
-  
+  phone.save().then(savedPhone => {
+    res.json(savedPhone)
+  })
 })
-//Update data
+
+// Update a person's number
 app.put('/api/persons/:id', (req, res) => {
-  const id = req.params.id.toString();
-  const body = req.body;
+  const body = req.body
 
-  const phoneIndex = phones.findIndex(v => v.id === id);
-  if (phoneIndex === -1) {
-    return res.status(404).json({ error: 'Person not found' });
+  const phone = {
+    name: body.name,
+    number: body.number
   }
-  const updatedPhone = { ...phones[phoneIndex], number: body.number };
 
-  phones[phoneIndex] = updatedPhone;
-  res.json(updatedPhone);
+  Phone.findByIdAndUpdate(req.params.id, phone, { new: true })
+    .then(updatedPhone => {
+      res.json(updatedPhone)
+    })
+    .catch(error => res.status(500).json({ error: 'failed to update' }))
 })
+
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
