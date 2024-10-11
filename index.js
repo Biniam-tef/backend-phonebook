@@ -45,7 +45,7 @@ let phones = [
 
 app.get('/api/persons', (req, res) => {
   Phone.find({}).then(phones => {
-    response.json(phones)
+    res.json(phones)
   })
 })
 
