@@ -53,12 +53,20 @@ app.get('/api/persons/:id', (req, res) => {
 
 // Delete a person by ID
 app.delete('/api/persons/:id', (req, res) => {
-  Phone.findByIdAndRemove(req.params.id)
-    .then(() => {
-      res.status(204).end()
+  Phone.findByIdAndDelete(req.params.id)
+    .then(result => {
+      if (result) {
+        res.status(204).end(); // No content, deletion successful
+      } else {
+        res.status(404).json({ error: 'Phone not found' }); // Handle non-existent ID
+      }
     })
-    .catch(error => res.status(500).json({ error: 'failed to delete' }))
-})
+    .catch(error => {
+      console.error('Error deleting phone:', error);
+      res.status(500).json({ error: 'Failed to delete phone' });
+    });
+});
+
 
 // Add a new person
 app.post('/api/persons', (req, res) => {
