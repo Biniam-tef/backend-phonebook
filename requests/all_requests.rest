@@ -2,10 +2,20 @@ POST http://localhost:3001/api/persons
 Content-Type: application/json
 
 {
-    "name": "Mary Poppendieck",
-    "number": "39-23-6423122" 
+    "name": "Dana",
+    "number": "42323" 
+}
+###
+GET http://localhost:3001/api/persons/670ecbfac707d3e6199b6c82
+### 
+PUT http://localhost:3001/api/persons/670ecbfac707d3e6199b6c82
+Content-Type: application/json
+
+{
+    "name": "Bob Noob",
+    "number": "1122" 
 }
 ###
 GET http://localhost:3001/api/persons
 ###
-DELETE http://localhost:3001/api/persons/670d7111190f0f7d9f6a41ac
+DELETE http://localhost:3001/api/persons/670ec3e7c707d3e6199b6c6a

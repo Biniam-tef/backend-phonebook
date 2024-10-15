@@ -1,17 +1,44 @@
 const express = require('express')
-const cors = require('cors')
-const morgan = require('morgan')
-
 const app = express()
-
 require('dotenv').config()
 
 const Phone = require('./models/phonebook')
 
 app.use(express.static('dist'))
+
+const requestLogger = (request, response, next) => {
+  console.log('Method:', request.method)
+  console.log('Path:  ', request.path)
+  console.log('Body:  ', request.body)
+  console.log('---')
+  next()
+}
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+
+  next(error)
+}
+
+const cors = require('cors')
+const morgan = require('morgan')
+
+app.use(cors())
 app.use(express.json())
 app.use(morgan('tiny'))
-app.use(cors())
+app.use(requestLogger)
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+}
+
+app.get('/', (request, response) => {
+  response.send('<h1>Hello World!</h1>')
+})
 
 
 morgan.token('body', (req) => {
@@ -39,34 +66,15 @@ app.get('/info', (req, res) => {
 })
 
 // Fetch a specific person by ID
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
   Phone.findById(req.params.id).then(phone => {
     if (phone) {
       res.json(phone)
     } else {
       res.status(404).end()
     }
-  }).catch(error => {
-    res.status(500).json({ error: 'failed to fetch person' })
-  })
+  }).catch(error => next(error))
 })
-
-// Delete a person by ID
-app.delete('/api/persons/:id', (req, res) => {
-  Phone.findByIdAndDelete(req.params.id)
-    .then(result => {
-      if (result) {
-        res.status(204).end(); // No content, deletion successful
-      } else {
-        res.status(404).json({ error: 'Phone not found' }); // Handle non-existent ID
-      }
-    })
-    .catch(error => {
-      console.error('Error deleting phone:', error);
-      res.status(500).json({ error: 'Failed to delete phone' });
-    });
-});
-
 
 // Add a new person
 app.post('/api/persons', (req, res) => {
@@ -85,9 +93,21 @@ app.post('/api/persons', (req, res) => {
     res.json(savedPhone)
   })
 })
+// Delete a person by ID
+app.delete('/api/persons/:id', (req, res, next) => {
+  Phone.findByIdAndDelete(req.params.id)
+    .then(result => {
+      if (result) {
+        res.status(204).end(); // No content, deletion successful
+      } else {
+        res.status(404).json({ error: 'Phone not found' }); // Handle non-existent ID
+      }
+    })
+    .catch(error => next(error));
+});
 
 // Update a person's number
-app.put('/api/persons/:id', (req, res) => {
+app.put('/api/persons/:id', (req, res, next) => {
   const body = req.body
 
   const phone = {
@@ -99,9 +119,11 @@ app.put('/api/persons/:id', (req, res) => {
     .then(updatedPhone => {
       res.json(updatedPhone)
     })
-    .catch(error => res.status(500).json({ error: 'failed to update' }))
+    .catch(error => next(error))
 })
 
+app.use(unknownEndpoint)
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
