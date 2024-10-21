@@ -32,7 +32,7 @@ mongoose.connect(url)
       const newPhoneEntry = new Phone({ name, number })
       return newPhoneEntry.save().then(() => {
         console.log(`Added ${name} number ${number} to phonebook`)
-        mongoose.connection.close() 
+        mongoose.connection.close()
       })
     } else {
       // If no new name and number are provided, just print all the existing data
@@ -41,7 +41,7 @@ mongoose.connect(url)
         result.forEach(entry => {
           console.log(`${entry.name} ${entry.number}`)
         })
-        mongoose.connection.close() 
+        mongoose.connection.close()
       })
     }
   })

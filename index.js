@@ -23,7 +23,6 @@ const errorHandler = (error, request, response, next) => {
   } else if (error.name === 'ValidationError') {
     return response.status(400).json({ error: error.message })
   }
-
   next(error)
 }
 
@@ -94,8 +93,8 @@ app.post('/api/persons', (req, res, next) => {
 
   phone.save()
     .then(savedPhone => {
-    res.json(savedPhone)
-  })
+      res.json(savedPhone)
+    })
     .catch(error => next(error))
 })
 // Delete a person by ID
@@ -103,13 +102,13 @@ app.delete('/api/persons/:id', (req, res, next) => {
   Phone.findByIdAndDelete(req.params.id)
     .then(result => {
       if (result) {
-        res.status(204).end(); 
+        res.status(204).end()
       } else {
-        res.status(404).json({ error: 'Phone not found' }); 
+        res.status(404).json({ error: 'Phone not found' })
       }
     })
-    .catch(error => next(error));
-});
+    .catch(error => next(error))
+})
 
 // Update a person's number
 app.put('/api/persons/:id', (req, res, next) => {
@@ -121,9 +120,9 @@ app.put('/api/persons/:id', (req, res, next) => {
   }
 
   Phone.findByIdAndUpdate(
-    req.params.id, 
-    phone, 
-    { new: true, new: true, runValidators: true, context: 'query'}
+    req.params.id,
+    phone,
+    { new: true, runValidators: true, context: 'query' }
   )
     .then(updatedPhone => {
       res.json(updatedPhone)
