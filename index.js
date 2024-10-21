@@ -19,6 +19,9 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
+
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
   }
 
   next(error)
@@ -77,7 +80,7 @@ app.get('/api/persons/:id', (req, res, next) => {
 })
 
 // Add a new person
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
   const body = req.body
 
   if (!body.name || !body.number) {
@@ -89,18 +92,20 @@ app.post('/api/persons', (req, res) => {
     number: body.number
   })
 
-  phone.save().then(savedPhone => {
+  phone.save()
+    .then(savedPhone => {
     res.json(savedPhone)
   })
+    .catch(error => next(error))
 })
 // Delete a person by ID
 app.delete('/api/persons/:id', (req, res, next) => {
   Phone.findByIdAndDelete(req.params.id)
     .then(result => {
       if (result) {
-        res.status(204).end(); // No content, deletion successful
+        res.status(204).end(); 
       } else {
-        res.status(404).json({ error: 'Phone not found' }); // Handle non-existent ID
+        res.status(404).json({ error: 'Phone not found' }); 
       }
     })
     .catch(error => next(error));
@@ -115,7 +120,11 @@ app.put('/api/persons/:id', (req, res, next) => {
     number: body.number
   }
 
-  Phone.findByIdAndUpdate(req.params.id, phone, { new: true })
+  Phone.findByIdAndUpdate(
+    req.params.id, 
+    phone, 
+    { new: true, new: true, runValidators: true, context: 'query'}
+  )
     .then(updatedPhone => {
       res.json(updatedPhone)
     })
